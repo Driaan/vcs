@@ -63,6 +63,8 @@ func NewSvnRepo(remote, local string) (*SvnRepo, error) {
 // SvnRepo implements the Repo interface for the Svn source control.
 type SvnRepo struct {
 	base
+	Username string
+	Password string
 }
 
 // Vcs retrieves the underlying VCS being implemented.
@@ -80,11 +82,20 @@ func (s *SvnRepo) Get() error {
 	} else if runtime.GOOS == "windows" && filepath.VolumeName(remote) != "" {
 		remote = "file:///" + remote
 	}
-	out, err := s.run("svn", "checkout", remote, s.LocalPath())
+	out, err := s.svn("checkout", remote, s.LocalPath())
 	if err != nil {
 		return NewRemoteError("Unable to get repository", err, string(out))
 	}
 	return nil
+}
+
+func (s *SvnRepo) svn(cmd string, args ...string) ([]byte, error) {
+	if ``!=s.Username {
+		args = append([]string{`--username`,s.Usernmae,`--password`,s.Password}, args...)
+	}
+	args = append([]string{cmd}, args...)
+	return s.run(`svn`, args...)
+
 }
 
 // Init will create a svn repository at remote location.
@@ -116,7 +127,11 @@ func (s *SvnRepo) Init() error {
 
 // Update performs an SVN update to an existing checkout.
 func (s *SvnRepo) Update() error {
-	out, err := s.RunFromDir("svn", "update")
+	args := []string{`update`}
+	if ``!=s.Username {
+		args = append(args, `--username`, s.Username, `--password`, s.Password)
+	}
+	out, err := s.RunFromDir("svn", args...)
 	if err != nil {
 		return NewRemoteError("Unable to update repository", err, string(out))
 	}
@@ -125,7 +140,12 @@ func (s *SvnRepo) Update() error {
 
 // UpdateVersion sets the version of a package currently checked out via SVN.
 func (s *SvnRepo) UpdateVersion(version string) error {
-	out, err := s.RunFromDir("svn", "update", "-r", version)
+	args := []string{`update`}
+	if ``!=s.Username {
+		args = append(args, `--username`, s.Username, `--password`, s.Password)
+	}
+	args = append(args, `-r`, version)
+	out, err := s.RunFromDir("svn", args...)
 	if err != nil {
 		return NewRemoteError("Unable to update checked out version", err, string(out))
 	}
