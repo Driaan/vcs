@@ -91,7 +91,7 @@ func (s *SvnRepo) Get() error {
 
 func (s *SvnRepo) svn(cmd string, args ...string) ([]byte, error) {
 	if ``!=s.Username {
-		args = append([]string{`--username`,s.Usernmae,`--password`,s.Password}, args...)
+		args = append([]string{`--username`,s.Username,`--password`,s.Password}, args...)
 	}
 	args = append([]string{cmd}, args...)
 	return s.run(`svn`, args...)
